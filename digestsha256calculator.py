@@ -20,43 +20,43 @@ def http_digest_sha256(username, password, realm, nonce, cnonce, nc, method, uri
 def parse_digest():
     digest_string = digest_entry.get("1.0", tk.END).strip()
     
-    # Method와 Authorization Header를 포함한 Digest 정보를 파싱하는 정규 표현식
-    method_pattern = r'^(GET|POST|OPTIONS|PUT|DELETE|PATCH|HEAD|CONNECT|TRACE)\s'
-    digest_pattern = r'Authorization:\sDigest\susername="(.*?)", realm="(.*?)", nonce="(.*?)", uri="(.*?)", algorithm=(.*?), response="(.*?)", opaque="(.*?)", qop=(.*?), nc=(.*?), cnonce="(.*?)"'
-
-    # Method 파싱
-    method_match = re.search(method_pattern, digest_string)
+    # Method 파싱 (대소문자 구분 없이)
+    method_match = re.search(r'^(GET|POST|OPTIONS|PUT|DELETE|PATCH|HEAD|CONNECT|TRACE)\s', digest_string, re.IGNORECASE)
     if method_match:
         method = method_match.group(1)
         method_entry.delete(0, tk.END)
         method_entry.insert(0, method)
-    
-    # Authorization Header 파싱
-    digest_match = re.search(digest_pattern, digest_string)
-    if digest_match:
+
+    # 각 필드를 개별적으로 대소문자 구분 없이 파싱
+    username_match = re.search(r'username="(.*?)"', digest_string, re.IGNORECASE)
+    realm_match = re.search(r'realm="(.*?)"', digest_string, re.IGNORECASE)
+    nonce_match = re.search(r'nonce="(.*?)"', digest_string, re.IGNORECASE)
+    uri_match = re.search(r'uri="(.*?)"', digest_string, re.IGNORECASE)
+    qop_match = re.search(r'qop="(.*?)"', digest_string, re.IGNORECASE)
+    nc_match = re.search(r'nc=([0-9a-fA-F]+)', digest_string, re.IGNORECASE)
+    cnonce_match = re.search(r'cnonce="(.*?)"', digest_string, re.IGNORECASE)
+
+    if username_match:
         username_entry.delete(0, tk.END)
-        username_entry.insert(0, digest_match.group(1))
-        
+        username_entry.insert(0, username_match.group(1))
+    if realm_match:
         realm_entry.delete(0, tk.END)
-        realm_entry.insert(0, digest_match.group(2))
-        
+        realm_entry.insert(0, realm_match.group(1))
+    if nonce_match:
         nonce_entry.delete(0, tk.END)
-        nonce_entry.insert(0, digest_match.group(3))
-        
+        nonce_entry.insert(0, nonce_match.group(1))
+    if uri_match:
         uri_entry.delete(0, tk.END)
-        uri_entry.insert(0, digest_match.group(4))
-        
+        uri_entry.insert(0, uri_match.group(1))
+    if qop_match:
         qop_entry.delete(0, tk.END)
-        qop_entry.insert(0, digest_match.group(8))
-        
+        qop_entry.insert(0, qop_match.group(1))
+    if nc_match:
         nc_entry.delete(0, tk.END)
-        nc_entry.insert(0, digest_match.group(9))
-        
+        nc_entry.insert(0, nc_match.group(1))
+    if cnonce_match:
         cnonce_entry.delete(0, tk.END)
-        cnonce_entry.insert(0, digest_match.group(10))
-    else:
-        response_text.delete("1.0", tk.END)
-        response_text.insert(tk.END, "Invalid Digest format")
+        cnonce_entry.insert(0, cnonce_match.group(1))
 
 # 계산 버튼을 눌렀을 때 실행되는 함수
 def calculate():
